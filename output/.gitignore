@@ -1,1 +1,5 @@
-# Ingnore output files to avoid push to remote repo 
+# Ignore large datafiles within this folder but not the folder itself
+
+*
+*/
+!.gitignore
