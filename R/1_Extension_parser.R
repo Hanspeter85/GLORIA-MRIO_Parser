@@ -5,11 +5,13 @@ for(year in years)
 {
   print( str_c("Computing extension for ",year) )
   
+  # Read processing date of files of specific year
+  date <- substr( list.files( str_c(path$rawExtension, year, "/") )[1], 1, 8)
+  
   # Read raw matrix, transform to matrix and select industries
-  Q <- fread( str_c(path$root, 
-                    path$rawExtension, 
-                    year, "/", 
-                    filename$PreExtension, "TQ", 
+  Q <- fread( str_c(path$rawExtension, 
+                    year, "/", date, 
+                    filename$pre, "TQ", 
                     filename$mid, year, filename$post) )
   
   Q <- as.matrix(Q)

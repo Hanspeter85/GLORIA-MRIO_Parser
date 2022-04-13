@@ -4,13 +4,19 @@
 
 MRIO_parser <- function(year)
 {
+  library(data.table)
+  library(stringr)
+  
+  # Read processing date of files of specific year
+  date <- substr( list.files( str_c(path$rawMRIO, year, "/") )[1], 1, 8)
+  
   # Read transaction matrix
-  T <- fread( str_c(path$rawMRIO, year, "/", 
-                    filename$PreMRIO, "T", filename$mid, year, filename$post) )
+  T <- fread( str_c(path$rawMRIO, year, "/", date, 
+                    filename$pre, "T", filename$mid, year, filename$post) )
   
   # Read final demand matrix
-  Y_raw <- fread( str_c(path$rawMRIO, year, "/", 
-                        filename$PreMRIO, "Y", filename$mid, year, filename$post) )
+  Y_raw <- fread( str_c(path$rawMRIO, year, "/", date,
+                        filename$pre, "Y", filename$mid, year, filename$post) )
   
   # Transform to matrix format
   T <- as.matrix(T)
