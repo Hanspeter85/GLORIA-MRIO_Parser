@@ -10,7 +10,7 @@ for(year in years)
   
   # Read raw matrix, transform to matrix and select industries
   Q <- fread( str_c(path$rawExtension, 
-                    year, "/", date, 
+                    year, "/", date,
                     filename$pre, "TQ", 
                     filename$mid, year, filename$post) )
   

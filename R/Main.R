@@ -15,8 +15,7 @@ path <- list("rawMRIO" = "./input/Version 55_March 2022/GLORIA_MRIOs_55_",
              "storeMRIOModel" = "./output/EEMRIO/",
              "storeResults" = "./output/results/")
 
-filename <- list("PreMRIO" = "20220314_120secMother_AllCountries_002_",
-                 "PreExtension" = "20220106_120secMother_AllCountries_002_",
+filename <- list("pre" = "_120secMother_AllCountries_002_",
                  "mid" = "-Results_",
                  "post" = "_055_Markup001(full).csv",
                  "labels" = "GLORIA_ReadMe.xlsx" )
@@ -26,22 +25,25 @@ source("./R/0_create_labels.R")
 
 ## Set years of the time series and perform parsing
 years <- 1990:2020
-year <- 2008
+year <- 1990
 
 # Execute script for parsing the extensions (materials, labor, carbon, energy, land)
 source("./R/1_Extension_parser.R")
 # Load function for parsing the basic MRIO variables (L, A, S, U, Y, ...)
 source("./R/1_MRIO_parser.R")
 
-# Set number of cores for parallelisation
-nr_core <- 10
-# Take time and start/stop cluster
-start1 <- Sys.time()
-cl <- makeCluster(nr_core)
-parLapply(cl,year,calculate)
-stopCluster(cl)
-end1 <- Sys.time()
-end1 - start1
+
+
+# # Set number of cores for parallelisation
+# nr_core <- 8
+# # Take time and start/stop cluster
+# start1 <- Sys.time()
+# cl <- makeCluster(nr_core)
+# clusterExport(cl, c("path","filename"), envir=environment())
+# parLapply(cl,years,MRIO_parser)
+# stopCluster(cl)
+# end1 <- Sys.time()
+# end1 - start1
 
 
           

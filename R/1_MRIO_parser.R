@@ -2,10 +2,12 @@
 # It stores the data as csv in the output folder. To run the function it needs the labels. 
 # Parsing tables for one year can take a lot of time. Makes sure to unzip the folders beforehand.
 
-MRIO_parser <- function(year)
+for(year in years)
 {
-  library(data.table)
-  library(stringr)
+  # library(data.table)
+  # library(stringr)
+  
+  print( str_c("Computing MRIO for ",year," at ",Sys.time() ) )
   
   # Read processing date of files of specific year
   date <- substr( list.files( str_c(path$rawMRIO, year, "/") )[1], 1, 8)
