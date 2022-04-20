@@ -35,21 +35,17 @@ for(year in years)
   
   # Gross production of all industries (x) and products (q)
   q <- rowSums(U) + rowSums(Y)
-  q[q == 0] <- 10^-7
+  # q[q == 0] <- 10^-7
   # q <- colSums(S)
-  x_old <- rowSums(S)             
+  x <- rowSums(S)             
   
   D <- t( t(S) / colSums(S) )  # Commodity proportions i.e. market share matrix (ixp)
   
   # Set NaN (due to zero gross output) to zero
   D[is.na(D)] <- 0                
   
-  sum(D)
-  sum(x)
-  sum(x_old)
-  
-  x <- colSums( t(D) * q )
-  x[x == 0] <- 10^-7
+  # x <- colSums( t(D) * q )
+  # x[x == 0] <- 10^-7
   
   # Commodity by industry coefficient matrix
   B <- t(t(U)/x)                  
