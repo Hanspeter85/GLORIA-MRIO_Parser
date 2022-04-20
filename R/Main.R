@@ -31,6 +31,14 @@ year <- 1990
 source("./R/1_Extension_parser.R")
 # Load function for parsing the basic MRIO variables (L, A, S, U, Y, ...)
 source("./R/1_MRIO_parser.R")
+# Load function for performing basic MRIO footprint analysis
+source("./R/2_calculate_footprint_FromTo.R")
+
+# Select year and stressor (biomass, metals, minerals, fossilfuels, energy, GWP100, landuse, employment 
+# and caculate from-to flow results. Set region to 1:164 for getting results for all countries
+
+calculate_footprint_FromTo(stressor = "biomass", year = 2008, region = 1)
+# calculate_footprint_FromTo(stressor = "biomass", year = 2008, region = 1:164)
 
 
 
