@@ -59,7 +59,7 @@ fwrite( overview, str_c(path$storeResults, "Extension_check_timeseries_1990to202
 colnames(overview) <- c("region", "stressor", "value", "year")
 
 units <- data.frame("stressor" = c("biomass", "metals", "minerals", "fossilfuels", "energy", "GWP100", "landuse", "employment"),
-                    "unit" = c("kilo tons", "kilo tons", "kilo tons", "kilo tons", "tera joule", "kilo tons CO2eq", "1000 ha", "1000 persons") )
+                    "unit" = c("tons", "tons", "tons", "tons", "tera joule", "kilo tons CO2eq", "1000 ha", "1000 persons") )
 
 overview <- left_join(overview, units, by = "stressor")
 
