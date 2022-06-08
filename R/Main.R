@@ -5,7 +5,7 @@ library(stringr)
 library(data.table)
 library(reshape2)
 library(openxlsx)
-library(xlsx)
+# library(xlsx)
 library(dplyr)
 library(reshape2)
 library(parallel)
@@ -26,6 +26,11 @@ filename <- list("pre" = "_120secMother_AllCountries_002_",
 # Load all labels, codes, concordances and other meta information including the agg function
 source("./R/0_create_labels.R")
 
+# Load function for performing basic MRIO footprint analysis
+source("./R/2_calculate_footprint_FromTo.R")
+source("./R/2_calculate_all_footprints_FromTo.R")
+
+
 ## Set years of the time series and perform parsing
 years <- 1995:2020
 # year <- 1990
@@ -36,17 +41,15 @@ for(year in years)
   calculate_all_footprints_FromTo(year = year)
 }
 
+
 # Execute script for parsing the extensions (materials, labor, carbon, energy, land)
-source("./R/1_Extension_parser.R")
+# source("./R/1_Extension_parser.R")
 # Load function for parsing the basic MRIO variables (L, A, S, U, Y, ...)
-source("./R/1_MRIO_parser.R")
-# Load function for performing basic MRIO footprint analysis
-source("./R/2_calculate_footprint_FromTo.R")
+# source("./R/1_MRIO_parser.R")
 
 # Select year and stressor (biomass, metals, minerals, fossilfuels, energy, GWP100, landuse, employment 
 # and caculate from-to flow results. Set region to 1:164 for getting results for all countries
-
-calculate_footprint_FromTo(stressor = "biomass", year = 2008, region = 1)
+# calculate_footprint_FromTo(stressor = "biomass", year = 2008, region = 1)
 # calculate_footprint_FromTo(stressor = "biomass", year = 2008, region = 1:164)
 
           
