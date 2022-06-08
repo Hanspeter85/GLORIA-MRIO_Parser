@@ -4,9 +4,6 @@
 
 for(year in years)
 {
-  # library(data.table)
-  # library(stringr)
-  
   print( str_c("Computing MRIO for ",year," at ",Sys.time() ) )
   
   # Read processing date of files of specific year
@@ -35,17 +32,13 @@ for(year in years)
   
   # Gross production of all industries (x) and products (q)
   q <- rowSums(U) + rowSums(Y)
-  # q[q == 0] <- 10^-7
-  # q <- colSums(S)
-  x <- rowSums(S)             
+  q[q == 0] <- 10^-7
   
-  D <- t( t(S) / colSums(S) )  # Commodity proportions i.e. market share matrix (ixp)
+  D <- t( t(S) / colSums(S) ) # Commodity proportions i.e. market share matrix (ixp)
+  D[is.na(D)] <- 0            # Set NaN (due to zero gross output) to zero
   
-  # Set NaN (due to zero gross output) to zero
-  D[is.na(D)] <- 0                
-  
-  # x <- colSums( t(D) * q )
-  # x[x == 0] <- 10^-7
+  x <- colSums( t(D) * q )  # If x is calculated directly from S, this results in negative values in L
+  x[x == 0] <- 10^-7
   
   # Commodity by industry coefficient matrix
   B <- t(t(U)/x)                  
@@ -71,5 +64,14 @@ for(year in years)
   # Create inverse
   L <- solve(I - A)
   fwrite( L, str_c(path$storeMRIOModel,year,"_L.csv") )
+  
+  print("Minimum value in L")
+  print(min(L))
+  print("Sum of L")
+  print(sum(L))
+  print("Sum of orginal production")
+  print( sum(q) )
+  print("Sum of production when using L")
+  print( sum(t(L) * rowSums(Y) ) )
   
 }
