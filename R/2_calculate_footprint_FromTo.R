@@ -10,15 +10,13 @@ calculate_footprint_FromTo <- function(stressor, year, region)
   
   # Create empty data frame for results
   
+  
   result <- data.frame("FromRegionCode" = rep( unique$region$Lfd_Nr, nreg),
                        "FromRegionAcronym" = rep( unique$region$Region_acronyms, nreg),
                        "FromRegionName" = rep( unique$region$Region_names, nreg),
-                       "ToRegionCode" = rep( unique$region$Lfd_Nr, each = nreg),
-                       "ToRegionAcronym" = rep( unique$region$Region_acronyms, each = nreg),
-                       "ToRegionName" = rep( unique$region$Region_names, each = nreg),
-                       "FinalConsumerCode" = rep( unique$region$Lfd_Nr, each = (nreg*nreg) ),   
-                       "FinalConsumerAcronym" = rep( unique$region$Region_acronyms, each = (nreg*nreg) ),   
-                       "FinalConsumerName" = rep( unique$region$Region_names, each = (nreg*nreg) ),   
+                       "FinalConsumerCode" = rep( unique$region$Lfd_Nr, each = nreg ),   
+                       "FinalConsumerAcronym" = rep( unique$region$Region_acronyms, each = nreg ),   
+                       "FinalConsumerName" = rep( unique$region$Region_names, each = nreg ),   
                        "stressor" = stressor,
                        "year" = year,
                        "value" = 0,
