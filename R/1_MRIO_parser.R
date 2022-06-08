@@ -61,6 +61,9 @@ for(year in years)
   # Create identity matrix
   I <- diag( rep( 1,nrow(A) ) )
   
+  # Set diagonal values that are zero to small number 
+  diag(A)[diag(A) == 0] <- 10^-7
+  
   # Create inverse
   L <- solve(I - A)
   fwrite( L, str_c(path$storeMRIOModel,year,"_L.csv") )
