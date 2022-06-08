@@ -5,7 +5,9 @@ library(stringr)
 library(data.table)
 library(reshape2)
 library(openxlsx)
+library(xlsx)
 library(dplyr)
+library(reshape2)
 library(parallel)
 
 ## Set paths where tables in Tvy format are located and where the results should be stored
@@ -18,14 +20,21 @@ path <- list("rawMRIO" = "./input/Version 55_March 2022/GLORIA_MRIOs_55_",
 filename <- list("pre" = "_120secMother_AllCountries_002_",
                  "mid" = "-Results_",
                  "post" = "_055_Markup001(full).csv",
-                 "labels" = "GLORIA_ReadMe.xlsx" )
+                 "labels" = "GLORIA_ReadMe.xlsx",
+                 "RegConcordance" = "GLORIA_164RegAgg.xlsx")
 
-# Load all labels, codes and other meta information including the agg function
+# Load all labels, codes, concordances and other meta information including the agg function
 source("./R/0_create_labels.R")
 
 ## Set years of the time series and perform parsing
-years <- 1990:2020
-year <- 1990
+years <- 1995:2020
+# year <- 1990
+
+for(year in years)
+{
+  # calculate_all_sector_footprints_for_single_region(year = year, region = "USA")
+  calculate_all_footprints_FromTo(year = year)
+}
 
 # Execute script for parsing the extensions (materials, labor, carbon, energy, land)
 source("./R/1_Extension_parser.R")
@@ -39,19 +48,5 @@ source("./R/2_calculate_footprint_FromTo.R")
 
 calculate_footprint_FromTo(stressor = "biomass", year = 2008, region = 1)
 # calculate_footprint_FromTo(stressor = "biomass", year = 2008, region = 1:164)
-
-
-
-# # Set number of cores for parallelisation
-# nr_core <- 8
-# # Take time and start/stop cluster
-# start1 <- Sys.time()
-# cl <- makeCluster(nr_core)
-# clusterExport(cl, c("path","filename"), envir=environment())
-# parLapply(cl,years,MRIO_parser)
-# stopCluster(cl)
-# end1 <- Sys.time()
-# end1 - start1
-
 
           
