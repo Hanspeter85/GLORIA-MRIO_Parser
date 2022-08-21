@@ -5,7 +5,6 @@ library(stringr)
 library(data.table)
 library(reshape2)
 library(openxlsx)
-# library(xlsx)
 library(dplyr)
 library(reshape2)
 library(parallel)
@@ -26,19 +25,23 @@ filename <- list("pre" = "_120secMother_AllCountries_002_",
 # Load all labels, codes, concordances and other meta information including the agg function
 source("./R/0_create_labels.R")
 
+
+
+
 # Load function for performing basic MRIO footprint analysis
 source("./R/2_calculate_footprint_FromTo.R")
-source("./R/2_calculate_all_footprints_FromTo.R")
+# source("./R/2_calculate_all_sector_footprints_for_single_region.R")
 
 
 ## Set years of the time series and perform parsing
-years <- 1995:2020
+years <- 1990:1994
 # year <- 1990
 
 for(year in years)
 {
   # calculate_all_sector_footprints_for_single_region(year = year, region = "USA")
   calculate_all_footprints_FromTo(year = year)
+  # calculate_all_sector_flows_for_selected_regiongroup(year = year, region = "LDC")
 }
 
 

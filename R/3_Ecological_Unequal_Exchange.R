@@ -147,66 +147,67 @@ Ecological_unequal_exchange <- function(year, region)
   
   dat <- cbind(unique$sector, dat)
   
-  write.xlsx(dat, file = str_c(path$storeResults,"EuE_Sector_",region,"_",year,".xlsx") )
+  # Calculate average drain across all stressor variables
+  dat[is.na(dat)] <- 0
+  dat["Drain.Average"] <- rowMeans(dat[,c("Drain.RME", "Drain.Energy", "Drain.GHG", "Drain.Land", "Drain.Employment")], na.rm=TRUE)
   
-  Sector_price_of_RME <- VA_reg/RME_reg
+  ## Load MRIO variables (final demand, ...) to estimate drain for a unit of final demand
   
-  rownames(RME_reg) <- str_c("RME.from.",rownames(RME_reg))
-  rownames(VA_reg) <- str_c("VA.from.",rownames(VA_reg))
-  rownames(Sector_price_of_RME) <- str_c("Prices.of.",rownames(Sector_price_of_RME))
+  Y <- fread( str_c(path$storeMRIOModel, year, "_Y.csv" ) )
+  Y <- as.matrix(Y)
+  # Aggregate final demand categories
+  Y <- Agg( Y, labels$parsed$Y$region_name, 2)
   
-  result <- as.data.frame( t( rbind(RME_reg, VA_reg, Sector_price_of_RME) ) )
+  L <- fread( str_c(path$storeMRIOModel, year, "_L.csv" ) )
+  L <- as.matrix(L)
   
-  # Global average prices
-  Global_price_of_RME <-  summary$trade_sum_north_to_south[ summary$stressor == "valueadded"] / summary$trade_sum_north_to_south[ summary$stressor == "materials"]
+  # Calculate gross production vector
+  x <- colSums(t(L) * rowSums(Y))
   
-  # Estimate drain from South to North
-  result["T"] <- result$RME.from.Global.South * Global_price_of_RME - result$VA.from.Global.South
+  U <- fread( str_c(path$storeMRIOModel, year, "_U.csv" ) )
+  U <- as.matrix(U)
   
-  result[is.na(result)] <- 0
-  result[result == Inf] <- 0
+  # Create value added extension
+  VA <- as.vector( x - colSums(U) )
+  VA[VA < 0] <- 0
   
-  colSums(result)
+  # Filter and aggregate value added and final demand of target region 
+  index_reg <- labels$parsed$Z$index[labels$parsed$Z$region_code == unique$region$Lfd_Nr[unique$region$Region_acronyms == region]]
   
+  VA_reg <- VA[index_reg]
   
+  Y_reg <- Agg(Y[,unique$region$Lfd_Nr[unique$region$Region_acronyms == region]], labels$parsed$Z$sector_code, 1)
   
+  dat_2 <- cbind(unique$sector, "Final.demand" = Y_reg[,1], "Value.added" = VA_reg, "Drain.Average.Based.On.Final.Demand" = dat$Drain.Average)
+  dat_2["Final.Demand.Multiplier.For.Drain.Average"] <- dat_2$Drain.Average.Based.On.Final.Demand/dat_2$Final.demand 
+  dat_2["Drain.Average.Based.On.Value.Added"] <- dat_2$Final.Demand.Multiplier.For.Drain.Average * dat_2$Value.added
   
+  list_of_arrays <- list("final_demand_based" = dat, "value_added_based" = dat_2)
+  # write.xlsx(list_of_arrays, file = str_c(path$storeResults,"EuE_Sector_",region,"_",year,".xlsx"), overwrite = TRUE )
   
-  
-  rownames(test) <- unique$region$Region_names
-  sum(tmp)
-  
-  str(RME_reg)
-  nrow(RME_reg)
-  
-  
-  
-  test <- as.numeric(rownames(RME_reg))
-  reshape2::
-  test <- pivot_wider(RME_reg, names_from = To_SectorCode, values_from = value)
-  
-  ?pivot_wider
-  test <- reshape(RME_reg, idvar = "From_RegionCode", timevar = "To_SectorCode", v.names =  "value", direction = "wide")
-  
-  
-  
-  ?reshape
-  sum(RME_reg$value)
-  sum(test[,2:120])
-  
-  pivot_wider()
-  
-  tmp <- matrix(0, nrow = nreg, ncol = nsec)
-  
-  tmp[cbind(RME_reg$From_RegionCode, RME_reg$To_SectorCode)] <- RME_reg$value
-  
-  sum(tmp)
-  &, 
-  test <- cast(test, From_RegionCode + To_SectorCode, sum)
-  
-  reshape(dat1, idvar = "name", timevar = "numbers", direction = "wide")
-  
-  ?cast
-    
-
+  return(list_of_arrays)
 }
+
+# years <- 1995:2020
+# 
+# dat <- cbind(unique$sector, matrix(NA, nrow = 120, ncol = length(years)))
+# colnames(dat)[4:ncol(dat)] <- years
+# 
+# VA_TIME <- Y_TIME <- VA_Drain_TIME <- Y_Drain_TIME <- dat
+# 
+# for(year in years)
+# {
+#   print(year)
+#   tmp <- Ecological_unequal_exchange(year = year, region = "USA")
+#   VA_TIME[as.character(year)] <- tmp$value_added_based$Value.added  
+#   Y_TIME[as.character(year)] <- tmp$value_added_based$Final.demand
+#   VA_Drain_TIME[as.character(year)] <- tmp$value_added_based$Drain.Average.Based.On.Value.Added
+#   Y_Drain_TIME[as.character(year)] <- tmp$value_added_based$Drain.Average.Based.On.Final.Demand
+# }
+# 
+# list_of_arrays <- list("value_added" = VA_TIME,
+#                        "final_demand" = Y_TIME,
+#                        "value_added_drain" = VA_Drain_TIME,
+#                        "final_demand_drain" = Y_Drain_TIME )
+# 
+# write.xlsx(list_of_arrays, file = str_c(path$storeResults,"EuE_Sector_USA_TIMESERIES_1995-2020.xlsx"), overwrite = TRUE )

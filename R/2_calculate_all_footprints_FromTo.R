@@ -1,6 +1,6 @@
 # This script caculates all footprint results including bilateral trade
 
-# year <- 2015
+# year <- 1994
 
 calculate_all_footprints_FromTo <- function(year)
 {
