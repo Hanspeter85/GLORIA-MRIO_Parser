@@ -6,8 +6,7 @@ library(data.table)
 library(reshape2)
 library(openxlsx)
 library(dplyr)
-library(reshape2)
-library(parallel)
+# library(parallel)
 
 ## Set paths where tables in Tvy format are located and where the results should be stored
 # In case functions or certain scripts don't work, the reason might be found here!
@@ -55,4 +54,4 @@ for(year in years)
 # calculate_footprint_FromTo(stressor = "biomass", year = 2008, region = 1)
 # calculate_footprint_FromTo(stressor = "biomass", year = 2008, region = 1:164)
 
-          
+
