@@ -1,6 +1,9 @@
 # This script parses the extensions for the time series and computes summary files
 # Makes sure to unzip the folders beforehand.
 
+# The first loop computes the embodied stressor of final consumption. The second loop further down
+# reads the direct emissions of households 
+
 for(year in years)
 {
   print( str_c("Computing extension for ",year) )
@@ -63,6 +66,39 @@ units <- data.frame("stressor" = c("biomass", "metals", "minerals", "fossilfuels
 
 overview <- left_join(overview, units, by = "stressor")
 
-
-
 remove(overview, tmp)
+
+
+
+# Second loop for reading direct emissions of households 
+for(year in years)
+{
+  print( str_c("Computing household extension for ",year) )
+  
+  # Read processing date of files of specific year
+  date <- substr( list.files( str_c(path$rawExtension, year, "/") )[1], 1, 8)
+  
+  # Read raw matrix, transform to matrix and select industries
+  Q <- fread( str_c(path$rawExtension, 
+                    year, "/", date,
+                    filename$pre, "YQ", 
+                    filename$mid, year, filename$post) )
+  
+  Q <- as.matrix(Q)
+  
+  # Compile GWP100 vector (kilo tons CO2eq)
+  tmp_CO2 <- colSums(Q * unique$extension$CO2_eq)
+  
+  tmp <- data.frame(unique$region[,c(1,2,3)],
+                    stressor = "GWP100",
+                    unit = "kilo tons CO2eq",
+                    entity = "households",
+                    year = year,
+                    value = tmp_CO2 )
+  
+  colnames(tmp)[1:3] <- c("To_RegionCode", "To_RegionAcronym", "To_RegionName")
+  
+  # Write extension matrix to MRIO mopdel folder
+  fwrite( tmp, str_c(path$storeMRIOModel,year,"_Q_HH_GWP100.csv") )
+}
+

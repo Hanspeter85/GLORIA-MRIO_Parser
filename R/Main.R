@@ -11,9 +11,9 @@ library(dplyr)
 ## Set paths where tables in Tvy format are located and where the results should be stored
 # In case functions or certain scripts don't work, the reason might be found here!
 path <- list("rawMRIO" = "./input/Version 55_March 2022/GLORIA_MRIOs_55_",
-             "rawExtension" = "./input/Version 55_March 2022/GLORIA_MRIO_Loop055_part_III_satelliteaccounts/GLORIA_SatelliteAccounts_055_",
-             "storeMRIOModel" = "./output/EEMRIO/",
-             "storeResults" = "./output/results/")
+             "rawExtension" = "D:/WU/MRIO/GLORIA_version_55/Raw_Tvy_tables/GLORIA_MRIO_Loop055_part_III_satelliteaccounts/GLORIA_SatelliteAccounts_055_",
+             "storeMRIOModel" = "D:/WU/MRIO/GLORIA_version_55/Parsed/",
+             "storeResults" = "D:/WU/MRIO/GLORIA_version_55/Results/")
 
 filename <- list("pre" = "_120secMother_AllCountries_002_",
                  "mid" = "-Results_",
