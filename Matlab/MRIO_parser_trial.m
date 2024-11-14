@@ -1,18 +1,18 @@
 I = eye(19680);
 
-%for year = 1993:1994
+for year = 1990:2028
     
-%    disp(year)
+    disp(year)
     
-%    A = csvread( [ num2str(year) '_A.csv' ] );
+    A = readtable( [ num2str(year) '_A.csv' ] );
+    A = A{:,:};
     
+     sum(A, 'all')
     
-%     sum(A, 'all')
+    L = inv( I - A );
     
-    L = inv( I - A_new );
+    sum(sum(L))
     
-%    sum(sum(L))
+    writematrix(L, [ num2str(year) '_L.csv' ] );
     
-%    writematrix(L, [ num2str(year) '_L.csv' ] );
-    
-%end
+end
