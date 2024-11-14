@@ -1,54 +1,35 @@
 
-# year <- 2018
-# region <- "USA"
 
-Ecological_unequal_exchange <- function(year, region)
-{
+
   # Load footprints of specific regions and the world 
   FP_reg <- read.xlsx( str_c(path$storeResults,year,"_AllStressors_FromSourceRegions_to_Sectors_in_",region,".xlsx") ) %>% 
     mutate_if(is.factor, as.character)
+  
   FP_globe <- read.csv(str_c(path$storeResults,year,"_AllStressors_FromTo.csv")) %>% 
     mutate_if(is.factor, as.character)  
   
   # Define stressors for analysis
-  stressor <- data.frame("name" = c("biomass", 
-                                    "metals", 
-                                    "minerals", 
-                                    "fossilfuels", 
-                                    "energy", 
-                                    "GWP100", 
-                                    "landuse", 
-                                    "employment", 
-                                    "valueadded"),
-                         "unit" = c("tons", 
-                                    "tons", 
-                                    "tons", 
-                                    "tons", 
-                                    "tera joule", 
-                                    "kilo tons CO2eq", 
-                                    "1000 ha", 
-                                    "1000 persons",
-                                    "1000 USD"),
+  stressor <- data.frame("name" = colnames(Q),
                          stringsAsFactors = FALSE)
   
   
   RME_global <- sum( FP_globe$value[FP_globe$stressor %in% stressor$name[1:4]] )
-  Energy_global <- sum( FP_globe$value[FP_globe$stressor %in% stressor$name[9]] )
-  GWP100_global <- sum( FP_globe$value[FP_globe$stressor %in% stressor$name[6]] )
-  Landuse_global <- sum( FP_globe$value[FP_globe$stressor %in% stressor$name[7]] )
-  Employment_global <- sum( FP_globe$value[FP_globe$stressor %in% stressor$name[8]] )
-  Valueadded_global <- sum( FP_globe$value[FP_globe$stressor %in% stressor$name[9]] )
+  Energy_global <- sum( FP_globe$value[FP_globe$stressor %in% stressor$name[5]] )
+  GWP100_global <- sum( FP_globe$value[FP_globe$stressor %in% stressor$name[7]] )
+  Landuse_global <- sum( FP_globe$value[FP_globe$stressor %in% stressor$name[8]] )
+  Employment_global <- sum( FP_globe$value[FP_globe$stressor %in% stressor$name[9]] )
+  Valueadded_global <- sum( FP_globe$value[FP_globe$stressor %in% stressor$name[10]] )
   
   RME_trade <- sum( FP_globe$value[FP_globe$stressor %in% stressor$name[1:4] & FP_globe$From_RegionCode != FP_globe$To_RegionCode  & FP_globe$From_DevelopmentGroup == "Developed.economies"])
-  Energy_trade <- sum( FP_globe$value[FP_globe$stressor %in% stressor$name[9] & FP_globe$From_RegionCode != FP_globe$To_RegionCode  & FP_globe$From_DevelopmentGroup == "Developed.economies"] )
-  GWP100_trade <- sum( FP_globe$value[FP_globe$stressor %in% stressor$name[6] & FP_globe$From_RegionCode != FP_globe$To_RegionCode  & FP_globe$From_DevelopmentGroup == "Developed.economies"] )
-  Landuse_trade <- sum( FP_globe$value[FP_globe$stressor %in% stressor$name[7] & FP_globe$From_RegionCode != FP_globe$To_RegionCode  & FP_globe$From_DevelopmentGroup == "Developed.economies"] )
-  Employment_trade <- sum( FP_globe$value[FP_globe$stressor %in% stressor$name[8] & FP_globe$From_RegionCode != FP_globe$To_RegionCode  & FP_globe$From_DevelopmentGroup == "Developed.economies"] )
-  Valueadded_trade <- sum( FP_globe$value[FP_globe$stressor %in% stressor$name[9] & FP_globe$From_RegionCode != FP_globe$To_RegionCode  & FP_globe$From_DevelopmentGroup == "Developed.economies"] )
+  Energy_trade <- sum( FP_globe$value[FP_globe$stressor %in% stressor$name[5] & FP_globe$From_RegionCode != FP_globe$To_RegionCode  & FP_globe$From_DevelopmentGroup == "Developed.economies"] )
+  GWP100_trade <- sum( FP_globe$value[FP_globe$stressor %in% stressor$name[7] & FP_globe$From_RegionCode != FP_globe$To_RegionCode  & FP_globe$From_DevelopmentGroup == "Developed.economies"] )
+  Landuse_trade <- sum( FP_globe$value[FP_globe$stressor %in% stressor$name[8] & FP_globe$From_RegionCode != FP_globe$To_RegionCode  & FP_globe$From_DevelopmentGroup == "Developed.economies"] )
+  Employment_trade <- sum( FP_globe$value[FP_globe$stressor %in% stressor$name[9] & FP_globe$From_RegionCode != FP_globe$To_RegionCode  & FP_globe$From_DevelopmentGroup == "Developed.economies"] )
+  Valueadded_trade <- sum( FP_globe$value[FP_globe$stressor %in% stressor$name[10] & FP_globe$From_RegionCode != FP_globe$To_RegionCode  & FP_globe$From_DevelopmentGroup == "Developed.economies"] )
   
   # Sum of global production-based accounts
   summary <- data.frame( "stressor" = c("materials", "energy", "GWP100","landuse", "employment", "valueadded"),
-                         "unit" = c("tons", "tera joule", "kilo tons CO2eq", "1000 ha", "1000 persons", "1000 USD"),
+                         "unit" = c("tons", "tera joule", "kilo tons CO2eq", "1000 ha", "ppl", "1000 USD"),
                          "global_sum" = c(RME_global, Energy_global, GWP100_global, Landuse_global, Employment_global, Valueadded_global),
                          "trade_sum_north_to_south" = c(RME_trade, Energy_trade, GWP100_trade, Landuse_trade, Employment_trade, Valueadded_trade) )
   
@@ -60,25 +41,27 @@ Ecological_unequal_exchange <- function(year, region)
     tmp_orignal <- FP_reg %>% 
       filter( stressor %in% stressors) %>% 
       select(value, To_SectorCode, From_RegionCode)
+    
+#      pivot_wider(values_from = "value", names_from = "To_SectorCode")
   
     # Transform from long to wide
     tmp <- as.data.frame( acast(tmp_orignal,From_RegionCode ~ To_SectorCode, sum) )
     
     # which rows and columns are missing:
-    row_miss <- setdiff(1:nreg, as.numeric(rownames(tmp)))
-    col_miss <- setdiff(1:nsec, as.numeric(colnames(tmp)))
+    row_miss <- setdiff(1:n$reg, as.numeric(rownames(tmp)))
+    col_miss <- setdiff(1:n$sec, as.numeric(colnames(tmp)))
     
     # Insert missing elements in case
     if(length(row_miss) > 0)
     {
       tmp[(nrow(tmp) + length(row_miss)), ] <- 0
-      rownames(tmp)[(1+nreg-length(row_miss)):nreg] <- row_miss
+      rownames(tmp)[(1+n$reg-length(row_miss)):n$reg] <- row_miss
     }
     
     if(length(col_miss) > 0)
     {
       tmp[,(ncol(tmp) + length(col_miss))] <- 0
-      colnames(tmp)[(1+nsec-length(col_miss)):nsec ] <- col_miss
+      colnames(tmp)[(1+n$sec-length(col_miss)):n$sec ] <- col_miss
     }  
     
     # Re-order columns and rows according to index
@@ -95,12 +78,12 @@ Ecological_unequal_exchange <- function(year, region)
   }
   
   # Calculate full detail source regions
-  RME_reg <- Compile_FP_Source_Region_By_Sector(c("biomass", "metals", "minerals", "fossilfuels"))
-  Energy_reg <- Compile_FP_Source_Region_By_Sector(c("energy"))
-  GHG_reg <- Compile_FP_Source_Region_By_Sector(c("GWP100"))
-  Land_reg <- Compile_FP_Source_Region_By_Sector(c("landuse"))
-  Employment_reg <- Compile_FP_Source_Region_By_Sector(c("employment"))
-  VA_reg <- Compile_FP_Source_Region_By_Sector(c("valueadded"))
+  RME_reg <- Compile_FP_Source_Region_By_Sector(c("biomass[t]", "metals[t]", "minerals[t]", "fossilfuels[t]"))
+  Energy_reg <- Compile_FP_Source_Region_By_Sector(c("energy[TJ]"))
+  GHG_reg <- Compile_FP_Source_Region_By_Sector(c("OECD_GWP100[kt]"))
+  Land_reg <- Compile_FP_Source_Region_By_Sector(c("landuse[1000ha]"))
+  Employment_reg <- Compile_FP_Source_Region_By_Sector(c("employment[ppl]"))
+  VA_reg <- Compile_FP_Source_Region_By_Sector(c("valueadded[1000USD]"))
   
   # Aggregate to development groups
   RME_reg <- Agg(RME_reg, unique$region$Development_group, 1)
@@ -153,19 +136,19 @@ Ecological_unequal_exchange <- function(year, region)
   
   ## Load MRIO variables (final demand, ...) to estimate drain for a unit of final demand
   
-  Y <- fread( str_c(path$storeMRIOModel, year, "_Y.csv" ) )
-  Y <- as.matrix(Y)
-  # Aggregate final demand categories
-  Y <- Agg( Y, labels$parsed$Y$region_name, 2)
-  
-  L <- fread( str_c(path$storeMRIOModel, year, "_L.csv" ) )
-  L <- as.matrix(L)
-  
-  # Calculate gross production vector
-  x <- colSums(t(L) * rowSums(Y))
-  
-  U <- fread( str_c(path$storeMRIOModel, year, "_U.csv" ) )
-  U <- as.matrix(U)
+  # Y <- fread( str_c(path$storeMRIOModel, year, "_Y.csv" ) )
+  # Y <- as.matrix(Y)
+  # # Aggregate final demand categories
+  # Y <- Agg( Y, labels$parsed$Y$region_name, 2)
+  # 
+  # L <- fread( str_c(path$storeMRIOModel, year, "_L.csv" ) )
+  # L <- as.matrix(L)
+  # 
+  # # Calculate gross production vector
+  # x <- colSums(t(L) * rowSums(Y))
+  # 
+  # U <- fread( str_c(path$storeMRIOModel, year, "_U.csv" ) )
+  # U <- as.matrix(U)
   
   # Create value added extension
   VA <- as.vector( x - colSums(U) )
@@ -183,10 +166,12 @@ Ecological_unequal_exchange <- function(year, region)
   dat_2["Drain.Average.Based.On.Value.Added"] <- dat_2$Final.Demand.Multiplier.For.Drain.Average * dat_2$Value.added
   
   list_of_arrays <- list("final_demand_based" = dat, "value_added_based" = dat_2)
-  # write.xlsx(list_of_arrays, file = str_c(path$storeResults,"EuE_Sector_",region,"_",year,".xlsx"), overwrite = TRUE )
+  write.xlsx(list_of_arrays, file = str_c(path$storeResults,"EuE_Sector_",region,"_",year,".xlsx"), overwrite = TRUE )
   
-  return(list_of_arrays)
-}
+remove(Employment_reg, Energy_reg, FP_globe, FP_reg, GHG_reg, Land_reg, Y_reg,
+       RME_reg, dat, dat_2, stressor, summary, Employment_global, Employment_trade,
+       Energy_global, Energy_trade, GWP100_global, GWP100_trade, Landuse_global, Landuse_trade,
+       RME_global, RME_trade, VA, VA_reg, Valueadded_global, Valueadded_trade, index_reg, key, list_of_arrays)
 
 # years <- 1995:2020
 # 

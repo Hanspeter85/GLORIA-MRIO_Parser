@@ -3,16 +3,22 @@
 # Load R packages
 library(stringr)
 library(data.table)
-# library(reshape2)
+library(reshape2)
 library(openxlsx)
 library(tidyverse)
 # library(parallel)
 
 ## Set paths where tables in Tvy format are located and where the results should be stored
-# In case functions or certain scripts don't work, the reason might be found here!
-path <- list("rawMRIO" = "/scratch/COUCH/posixusers/GLORIA/GLORIA_version_59/Raw/",
-             "storeMRIOModel" = "/scratch/COUCH/posixusers/GLORIA/GLORIA_version_59/Parsed/",
-             "storeResults" = "/scratch/COUCH/posixusers/GLORIA/GLORIA_version_59/Results/")
+## In case functions or certain scripts don't work, the reason might be found here!
+
+# Set GLORIA version we want to use
+ver <- 59
+path <- list("rawMRIO" = str_c("/scratch/COUCH/posixusers/GLORIA/GLORIA_version_",ver,"/Raw/"),
+             "rawExtension" = "/scratch/COUCH/posixusers/GLORIA/GLORIA_version_59/Raw/GLORIA_MRIO_Loop059_part_III_satelliteaccounts/",
+             "storeMRIOModel" = str_c("/scratch/COUCH/posixusers/GLORIA/GLORIA_version_",ver,"/Parsed/"),
+             "storeResults" = str_c("/scratch/COUCH/posixusers/GLORIA/GLORIA_version_",ver,"/Results/"))
+
+remove(ver)
 
 filename <- list("labels" = "GLORIA_ReadMe_059.xlsx",
                  "RegConcordance" = "GLORIA_164RegAgg.xlsx")
@@ -21,27 +27,34 @@ filename <- list("labels" = "GLORIA_ReadMe_059.xlsx",
 source("./R/0_create_labels.R")
 
 # Execute script for parsing the extensions (materials, labor, carbon, energy, land)
-source("./R/1_Extension_parser.R")
+# Note that by default the extension data of version 59 is processed
+# source("./R/1_Extension_parser.R")
 
 # Load function for parsing the basic MRIO variables (L, A, S, U, Y, ...)
-source("./R/1_MRIO_parser.R")
+# source("./R/1_MRIO_parser.R")
 
 
 
 # Load function for performing basic MRIO footprint analysis
-source("./R/2_calculate_footprint_FromTo.R")
+
 # source("./R/2_calculate_all_sector_footprints_for_single_region.R")
 
 
 ## Set years of the time series and perform parsing
-years <- 1990:1994
-# year <- 1990
+TIME <- 1995:2020
+# year <- 1995
 
-for(year in years)
+region <- "CHE"   # Switzerland
+
+for(year in TIME)
 {
-  # calculate_all_sector_footprints_for_single_region(year = year, region = "USA")
-  calculate_all_footprints_FromTo(year = year)
-  # calculate_all_sector_flows_for_selected_regiongroup(year = year, region = "LDC")
+  print(year)
+  
+  source("./R/2_prepare_MRIO_for_calculation.R")
+  source("./R/2_calculate_all_footprints_FromTo.R")
+  source("./R/2_calculate_all_sector_footprints_for_single_region.R")
+  source("./R/3_Ecological_Unequal_Exchange.R")
+  
 }
 
 
