@@ -1,4 +1,5 @@
-# This script caculates all material footprint mulitpliers following a given 
+# Script for RME-Stat Project
+# This script caculates all material footprint multipliers following a given 
 # material concordance for specific region (= Austria)
 
 # material concordance to aggregate extension
@@ -12,6 +13,18 @@ reg <- "Austria"
 
 # Select column indices of region
 index_reg <- labels$parsed$Z$index[labels$parsed$Z$region_name == reg]
+
+# Create aggregation key for Z and Y to have an MRIO containing Austria and RoW aggregated
+agg_key <- labels$parsed$Z %>% 
+  mutate(agg_reg = case_when(region_name == reg ~ 1,
+                             .default = 2))
+
+# Labels for aggregated two-region MRIO
+labels_agg <- data.frame("index" = 1:240,
+                         "region_code" = rep(c(1,2),each = 120),
+                         "region_name" = rep(c("Austria","ROW"),each = 120),
+                         "sector_code" = rep(1:120,2),
+                         "sector_name" = rep(agg_key$sector_name[1:120],2))
 
 # Names of materials
 mat_names <- mat_conc$material_group_StAT |> unique()
@@ -55,35 +68,43 @@ for( year in TIME )
 {
   print(year)
   # Load raw extension, select materials and aggregated according to concordance
+  
   # folder for respective year
-  folder <- str_c(path$rawExtension,
-                  "GLORIA_SatelliteAccounts_059_", year, "/")
+  # folder <- str_c(path$rawExtension,
+  #                 "GLORIA_SatelliteAccounts_059_", year, "/")
   
   # Get names of files in extension folder
-  files <- list.files(folder)
+  files <- list.files(path$rawExtension)
   
   # Select file name that belongs to the inter-industry matrix 
-  i <- grep('TQ', files)
+  i <- grep(str_c("TQ-Results_",year), files)
   
   # Read raw matrix, transform to matrix and select industries
-  Q <- fread( str_c(folder, files[i]) )
+  Q <- fread( str_c(path$rawExtension, files[i]) )
   
   # Read row indices belonging to materials
   index <- unique$extension %>% filter(Sat_head_indicator == "Material") %>% pull(Lfd_Nr)
-  Q_mat <- Q[index,]
+  Q_mat <- as.matrix(Q)[index,indices$ind]
   
   # Aggregate material extension
   Q_mat_agg <- Agg(Q_mat, mat_conc$material_group_StAT, 1)
   
   # Load MRIO tables
-  L <- fread(str_c(path$storeMRIOModel,year,"_L.csv"))
+  Z <- fread(str_c(path$storeMRIOModel,year,"_U.csv"))
   Y <- fread(str_c(path$storeMRIOModel,year,"_Y.csv"))
+  
+  # Aggregate to two regions
+  tmp_1 <- Agg(x = as.matrix(Z), dim = 1, aggkey = str_c(agg_key$agg_reg, "_",agg_key$sector_code) )
+  tmp_2 <- Agg(x = as.matrix(tmp_1), dim = 2, aggkey = str_c(agg_key$agg_reg, "_",agg_key$sector_code) )
+  Z_agg <- tmp_2[c(121:240,1:120),c(121:240,1:120)]
+  
+  tmp_1 <- Agg(x = as.matrix(Y), dim = 1, aggkey = str_c(agg_key$agg_reg, "_",agg_key$sector_code) )
   
   # Estimate gross production
   x <- colSums(t(L)*rowSums(Y))
   
   # Calculate direct intensities
-  E <- t(Q_mat_agg[,indices$ind])/x
+  E <- t(Q_mat_agg[,])/x
 
   # Because division by zeros exist...
   E[is.na(E)] <- 0

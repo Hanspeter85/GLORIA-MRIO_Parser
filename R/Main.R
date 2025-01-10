@@ -14,7 +14,7 @@ library(tidyverse)
 # Set GLORIA version we want to use
 ver <- 59
 path <- list("rawMRIO" = str_c("/scratch/COUCH/posixusers/GLORIA/GLORIA_version_",ver,"/Raw/"),
-             "rawExtension" = "/scratch/COUCH/posixusers/GLORIA/GLORIA_version_59/Raw/GLORIA_MRIO_Loop059_part_III_satelliteaccounts/",
+             "rawExtension" = "/scratch/COUCH/posixusers/GLORIA/GLORIA_version_59a/Raw/GLORIA_MRIO_Loop059_part_III_satelliteaccounts/",
              "storeMRIOModel" = str_c("/scratch/COUCH/posixusers/GLORIA/GLORIA_version_",ver,"/Parsed/"),
              "storeResults" = str_c("/scratch/COUCH/posixusers/GLORIA/GLORIA_version_",ver,"/Results/"))
 
