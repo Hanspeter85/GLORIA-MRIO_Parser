@@ -12,11 +12,16 @@ TIME <- 1990:2028
 reg <- "Austria"
 
 # Select column indices of region
-index_reg <- labels$parsed$Z$index[labels$parsed$Z$region_name == reg]
+# index_reg <- labels$parsed$Z$index[labels$parsed$Z$region_name == reg]
 
 # Create aggregation key for Z and Y to have an MRIO containing Austria and RoW aggregated
 agg_key <- labels$parsed$Z %>% 
   mutate(agg_reg = case_when(region_name == reg ~ 1,
+                             .default = 2),
+         key = str_c(agg_reg, "_",sector_code) )
+
+agg_key_Y <- labels$parsed$Y %>% 
+  mutate(key = case_when(region_name == reg ~ 1,
                              .default = 2))
 
 # Labels for aggregated two-region MRIO
@@ -36,31 +41,34 @@ result_footprint <- data.frame("consuming_region" = reg,
                                stringsAsFactors = FALSE)
 
 
-result_multiplier <- data.frame("region" = reg,
+result_multiplier <- data.frame("producer_region" = "ROW",
                                 "material" = rep( mat_names, each = n$sec),
                                 "sector" = labels$parsed$Z$sector_name[1:120],
                                 "year" = rep(TIME, each = (120*19)),
-                                "MP_domestic" = NA,
-                                "MP_foreign" = NA,
+                                "MP_Austria" = NA,
+                                "MP_ROW" = NA,
                                 "gross_production" = NA,
+                                "imports_monetary_to_Austria" = NA,
                                 stringsAsFactors = FALSE)
 
-result_from_to <- data.frame("From_RegionCode" = rep( unique$region$Lfd_Nr, n$reg),
-                             "From_RegionAcronym" = rep( unique$region$Region_acronyms, n$reg),
-                             "From_RegionName" = rep( unique$region$Region_names, n$reg),
-                             "From_WorldRegion" = rep( unique$region$World_region, n$reg),
-                             "From_IncomeGroup" = rep( unique$region$Income_group, n$reg),
-                             "From_DevelopmentGroup" = rep( unique$region$Development_group, n$reg),
-                             "To_RegionCode" = rep( unique$region$Lfd_Nr, each = n$reg ),   
-                             "To_RegionAcronym" = rep( unique$region$Region_acronyms, each = n$reg ),   
-                             "To_RegionName" = rep( unique$region$Region_names, each = n$reg ),   
-                             "To_WorldRegion" = rep( unique$region$World_region, each = n$reg),
-                             "To_IncomeGroup" = rep( unique$region$Income_group, each = n$reg),
-                             "To_DevelopmentGroup" = rep( unique$region$Development_group, each = n$reg),
-                             "stressor" = rep(mat_names, each = (n$reg*n$reg) ),
-                             "year" = rep(TIME, each = (n$reg * n$reg * length(mat_names))),
-                             "value" = 0,
-                             stringsAsFactors = FALSE )
+result_global_FP <- data.frame("material" = rep( mat_names, length(TIME)),
+                               "year" = rep(TIME, each = length(mat_names)),
+                               "FP_Austria" = NA,
+                               "FP_ROW" = NA,
+                               stringsAsFactors = FALSE)
+
+result_finalproduct_import <- data.frame("material" = rep( mat_names, each = n$sec ),
+                                         "year" =  rep(TIME, each = (length(mat_names)*n$sec) ),
+                                         "final_product" = labels$parsed$Z$sector_name[1:120],
+                                         "producer" = "ROW",
+                                         "final_consumer" = reg,
+                                         "MP_ROW" = NA,
+                                         "MP_Austria" = NA,
+                                         "monetary_import_final_product" = NA)
+
+
+# Empty list for storing monetary import block of Austria
+IM <- list()
 
 # Loop across years
 # year <- 1990
@@ -86,32 +94,45 @@ for( year in TIME )
   index <- unique$extension %>% filter(Sat_head_indicator == "Material") %>% pull(Lfd_Nr)
   Q_mat <- as.matrix(Q)[index,indices$ind]
   
-  # Aggregate material extension
-  Q_mat_agg <- Agg(Q_mat, mat_conc$material_group_StAT, 1)
+  # Aggregate material extension according to materials list and two-region classification
+  tmp <- Agg(x = Q_mat, aggkey = mat_conc$material_group_StAT,dim =  1)
+  Q_mat_agg <- Agg(x = tmp, aggkey =  agg_key$key, dim = 2)[,c(121:240,1:120)]
   
   # Load MRIO tables
   Z <- fread(str_c(path$storeMRIOModel,year,"_U.csv"))
   Y <- fread(str_c(path$storeMRIOModel,year,"_Y.csv"))
   
-  # Aggregate to two regions
-  tmp_1 <- Agg(x = as.matrix(Z), dim = 1, aggkey = str_c(agg_key$agg_reg, "_",agg_key$sector_code) )
-  tmp_2 <- Agg(x = as.matrix(tmp_1), dim = 2, aggkey = str_c(agg_key$agg_reg, "_",agg_key$sector_code) )
+  # Aggregate MRIO to two regions
+  tmp_1 <- Agg(x = as.matrix(Z), dim = 1, aggkey = agg_key$key )
+  tmp_2 <- Agg(x = as.matrix(tmp_1), dim = 2, aggkey = agg_key$key )
   Z_agg <- tmp_2[c(121:240,1:120),c(121:240,1:120)]
   
-  tmp_1 <- Agg(x = as.matrix(Y), dim = 1, aggkey = str_c(agg_key$agg_reg, "_",agg_key$sector_code) )
+  tmp_1 <- Agg(x = as.matrix(Y), dim = 1, aggkey = agg_key$key)
+  tmp_2 <- Agg(x = tmp_1, dim = 2, aggkey = agg_key_Y$key)
+  Y_agg <- tmp_2[c(121:240,1:120),c(2,1)]
+  
+  sum(Y) - sum(Y_agg)
+  sum(Z) - sum(Z_agg)
   
   # Estimate gross production
-  x <- colSums(t(L)*rowSums(Y))
+  x <- rowSums(Z_agg) + rowSums(Y_agg)
   
   # Calculate direct intensities
-  E <- t(Q_mat_agg[,])/x
+  E <- t(Q_mat_agg)/x
 
-  # Because division by zeros exist...
+  # If division by zeros...
   E[is.na(E)] <- 0
   E[E == Inf] <- 0
   
-  L <- as.matrix(L)
-  Y <- as.matrix(Y)
+  # Technology matrix
+  A <- t(t(Z_agg)/x)
+  
+  # Identity matrix
+  I <- diag(1, nrow = nrow(A))
+  
+  # Leontief
+  L <- solve(I - A)
+  sum(L)
   
   print(str_c("sum of L ",sum(L)))
   print(str_c("min of L ",min(L)))
@@ -121,16 +142,13 @@ for( year in TIME )
   L_star <- t(t(L)/diag(L))
   
   print(str_c("sum of L_star ",sum(L_star)))
-  print(str_c("min of L star ",min(L_star)))
-  print(str_c("max of L star ",max(L_star)))
+  print(str_c("min of L_star ",min(L_star)))
+  print(str_c("max of L_star ",max(L_star)))
   
-  # Extract region from inverse
-  L_star_reg <- L_star[,index_reg]
+  sum(L %*% Y_agg) - sum(x)
   
-  # Extract final demand of region
-  Y_reg <- rowSums( Y[ , labels$parsed$Y$index[labels$parsed$Y$region_name == reg] ] )
-  
-  Y_tot <- Agg(Y, labels$parsed$Y$region_code, 2)
+  # Write import block into list
+  IM[[as.character(year)]] <- Z_agg[121:240,1:120]
   
   # Loop over materials
   # m <- 1
@@ -144,47 +162,67 @@ for( year in TIME )
     # 1. Output multiplier calculations 
     
     # Estimate multipliers
-    MP <- L_star_reg * E[,m]
+    MP <- L_star * E[,m]
       
     # Calculate domestic content
-    MP_dom <- colSums(MP[index_reg,])
+    MP_dom <- colSums(MP[1:120,121:240])
       
     # Calculate foreign content
-    MP_for <- colSums(MP) - MP_dom
+    MP_for <- colSums(MP[,121:240]) - MP_dom
   
-    # Write into data frame
-    result_multiplier$MP_domestic[result_multiplier$material == mat_name & result_multiplier$year == year] <- MP_dom
-    result_multiplier$MP_foreign[result_multiplier$material == mat_name & result_multiplier$year == year] <- MP_for
-    result_multiplier$gross_production[result_multiplier$material == mat_name & result_multiplier$year == year] <- x[index_reg]
-      
-    # 2. Final Demand footprint calculation for selected region 
+    # Monetary imports of intermediates to Austria
+    intermed <- rowSums(Z_agg[121:240,1:120])
     
-    # Estimate mulitplier 
+    # Write into data frame
+    result_multiplier$MP_Austria[result_multiplier$material == mat_name & result_multiplier$year == year] <- MP_dom
+    result_multiplier$MP_ROW[result_multiplier$material == mat_name & result_multiplier$year == year] <- MP_for
+    result_multiplier$gross_production[result_multiplier$material == mat_name & result_multiplier$year == year] <- x[121:240]
+    result_multiplier$imports_monetary_to_Austria[result_multiplier$material == mat_name & result_multiplier$year == year] <- intermed
+      
+    # 2. Total Final Demand footprint calculation for two regions 
+    
+    # Estimate multiplier 
     MP <- colSums( L * E[,m] )
   
     # Estimate footprint
-    FP <- sum( MP * Y_reg )
-      
+    FP <- MP %*% Y_agg
+    
     # Write into result data frame
-    result_footprint$value[result_footprint$year == year & result_footprint$material == mat_name] <- FP
+    result_global_FP$FP_Austria[result_global_FP$year == year & result_global_FP$material == mat_name] <- FP[1,1]
+    result_global_FP$FP_ROW[result_global_FP$year == year & result_global_FP$material == mat_name] <- FP[1,2]
     
-    # 3. From-To global flows of raw material equivalents for all regions
+    # 3. Final Demand Multipliers for imports of final products from ROW to Austria
     
-    # Mulitpliers
+    # Estimate multiplier 
     MP <- L * E[,m]
     
-    # Estimate footprint
-    FP <- Agg( MP %*% Y_tot, labels$parsed$Z$region_code, 1 ) |> c()
+    # Calculate domestic content in imports
+    MP_dom <- colSums(MP[1:120,121:240])
+    
+    # Calculate foreign content in imports 
+    MP_for <- colSums(MP[,121:240]) - MP_dom
+    
+    # Monetary imports of final products to Austria
+    import_final <- Y_agg[121:240,1]
     
     # Write into result data frame
-    result_from_to$value[result_from_to$year == year & result_from_to$stressor == mat_name] <- FP
+    result_finalproduct_import$MP_ROW[result_finalproduct_import$year == year & result_finalproduct_import$material == mat_name] <- MP_for
+    result_finalproduct_import$MP_Austria[result_finalproduct_import$year == year & result_finalproduct_import$material == mat_name] <- MP_dom
+    result_finalproduct_import$monetary_import_final_product[result_finalproduct_import$year == year & result_finalproduct_import$material == mat_name] <- import_final
   }
 }
 
+
 results <- list("output_mulitplier" = result_multiplier,
-                "consumption_footprints" = result_footprint)
+                "consumption_footprints" = result_global_FP,
+                "CBA_mulitpliers_imports" = result_finalproduct_import)
 
 write.xlsx( results, str_c(path$storeResults,"RME_Stat_Tool_GLORIA_output_multipliers_and_consumption_footprints_Austria_1990_2028.xlsx") )
+write.xlsx( IM , str_c(path$storeResults,"RME_Stat_Tool_GLORIA_intermediate_imports_from_ROW_to_Austria.xlsx") )
+
+
+
+
 
 results_FINAL_from_to <- result_from_to %>% 
   filter(value != 0)
