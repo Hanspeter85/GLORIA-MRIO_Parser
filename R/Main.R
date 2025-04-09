@@ -41,10 +41,11 @@ source("./R/0_create_labels.R")
 
 
 ## Set years of the time series and perform parsing
-TIME <- 1995:2020
+TIME <- 1995:2022
 # year <- 1995
 
-region <- "CHE"   # Switzerland
+# region <- "CHE"   # Switzerland
+# year <- 1995
 
 for(year in TIME)
 {
@@ -52,8 +53,6 @@ for(year in TIME)
   
   source("./R/2_prepare_MRIO_for_calculation.R")
   source("./R/2_calculate_all_footprints_FromTo.R")
-  source("./R/2_calculate_all_sector_footprints_for_single_region.R")
-  source("./R/3_Ecological_Unequal_Exchange.R")
   
 }
 
