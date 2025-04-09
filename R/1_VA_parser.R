@@ -3,9 +3,9 @@
 # Parsing tables for one year can take a lot of time. Makes sure to unzip the folders beforehand.
 
 
-TIME <- 1990:2028
+TIME <- 1995:2022
 
-# year <- 1990
+# year <- 1995
 
 for(year in TIME)
 {

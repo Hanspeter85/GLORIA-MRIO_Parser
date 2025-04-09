@@ -7,25 +7,25 @@
 # Get concordance for material groups
 conco_mat <- read.xlsx("./input/concordance_material_groups.xlsx")
 
-TIME <- 1990:2020
+TIME <- 1995:2022
 
-# year <- 1990
+# year <- 1995
 for(year in TIME)
 {
   print( str_c("Computing extension for ",year) )
  
   # folder for respective year
-  folder <- str_c(path$rawExtension,
-                  "GLORIA_SatelliteAccounts_059_", year, "/")
+  # folder <- str_c(path$rawExtension,
+  #                 "GLORIA_SatelliteAccounts_059_", year, "/")
   
   # Get names of files in extension folder
-  files <- list.files(folder)
+  files <- list.files(path$rawExtension)
   
   # Select file name that belongs to the inter-industry matrix 
-  i <- grep('TQ', files)
+  i <- grep(str_c('TQ-Results_',year), files)
   
   # Read raw matrix, transform to matrix and select industries
-  Q <- fread( str_c(folder, files[i]) )
+  Q <- fread( str_c(path$rawExtension, files[i]) )
   
   Q <- as.matrix(Q)
   Q <- Q[,indices$ind]
@@ -79,8 +79,8 @@ for(year in TIME)
     pivot_longer(names_to = "stressor", col = all_of(colnames_NEW))
      
     
-  if(year == 1990) overview <- tmp
-  if(year > 1990) overview <- rbind(overview, tmp)
+  if(year == 1995) overview <- tmp
+  if(year > 1995) overview <- rbind(overview, tmp)
   
   # Write extension matrix to MRIO mopdel folder
   fwrite( Q, str_c(path$storeMRIOModel,year,"_Q.csv") )
@@ -99,17 +99,17 @@ for(year in TIME)
   print( str_c("Computing household GHG extension for ",year) )
   
   # folder for respective year
-  folder <- str_c(path$rawExtension,
-                  "GLORIA_SatelliteAccounts_059_", year, "/")
+  # folder <- str_c(path$rawExtension,
+  #                 "GLORIA_SatelliteAccounts_059_", year, "/")
   
   # Get names of files in extension folder
-  files <- list.files(folder)
+  files <- list.files(path$rawExtension)
   
   # Select file name that belongs to the inter-industry matrix 
-  i <- grep('YQ', files)
+  i <- grep(str_c('YQ-Results_',year), files)
   
   # Read raw matrix, transform to matrix and select industries
-  Q <- fread( str_c(folder, files[i]) )
+  Q <- fread( str_c(path$rawExtension, files[i]) )
   Q <- as.matrix(Q)
   
   # Select GWP100 vector (kilo tonnes CO2eq) from EDGAR database

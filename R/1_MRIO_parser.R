@@ -3,9 +3,9 @@
 # Parsing tables for one year can take a lot of time. Makes sure to unzip the folders beforehand.
 
 
-TIME <- 1991:2028
+TIME <- 1995:2022
 
-# year <- 1990
+# year <- 1995
 # Do you want to compile the technology matrix (A) only and/or the Leontief Inverse (set 0 or 1 respectively)
 parse_A <- 1
 parse_L <- 1
